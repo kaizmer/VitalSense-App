@@ -12,10 +12,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
+import SecuritySettings from './securitysettings';
 
-export default function Settings({ onBack }) {
+export default function Settings({ onBack, user }) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const [notifications, setNotifications] = useState(true);
+  const [showSecuritySettings, setShowSecuritySettings] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -59,7 +61,7 @@ export default function Settings({ onBack }) {
       title: 'Privacy & Security',
       subtitle: 'Manage your privacy settings',
       type: 'navigation',
-      onPress: () => console.log('Privacy'),
+      onPress: () => setShowSecuritySettings(true),
     },
     {
       id: 5,
@@ -90,6 +92,10 @@ export default function Settings({ onBack }) {
       ),
     },
   ];
+
+  if (showSecuritySettings) {
+    return <SecuritySettings onBack={() => setShowSecuritySettings(false)} user={user} />;
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

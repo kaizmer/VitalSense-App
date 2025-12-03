@@ -66,7 +66,7 @@ function AppContent() {
 					user={user}
 				/>
 			)}
-			{screen === 'Settings' && <Settings onBack={() => handleNavigate('Home')} />}
+			{screen === 'Settings' && <Settings onBack={() => handleNavigate('Home')} user={user} />}
 			{/* ...future screens can be rendered here based on `screen` */}
 			<StatusBar style={isDarkMode ? 'light' : 'dark'} />
 		</View>

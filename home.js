@@ -39,7 +39,6 @@ export default function Home({ onNavigate, user }) {
   const { colors } = useTheme();
   
   const [selectedMood, setSelectedMood] = useState('Happy');
-  const [addingScan, setAddingScan] = useState(false);
   const [hasNotifications, setHasNotifications] = useState(false);
   const [savingMood, setSavingMood] = useState(false);
 
@@ -307,183 +306,6 @@ export default function Home({ onNavigate, user }) {
       try { respSub.remove(); } catch (_) { /* ignore */ }
     };
   }, [onNavigate]);
-
-  // helper: send immediate local notification for a created scan
-  const sendLocalNotification = async (row) => {
-    try {
-      if (!row) return;
-      const temp = Number(row.temperature);
-      const hr = Number(row.heart_rate);
-      const bp = String(row.blood_pressure || '');
-      const parts = bp.split('/');
-      const sys = parseFloat(parts[0]);
-      const dia = parts.length > 1 ? parseFloat(parts[1]) : NaN;
-      const highBP = Number.isFinite(sys) && Number.isFinite(dia) && (sys > 130 || dia > 80);
-      const highTemp = Number.isFinite(temp) && temp > 38.0;
-      const highHR = Number.isFinite(hr) && hr > 100;
-
-      const title = (highBP || highTemp || highHR) ? 'Warning: Abnormal Scan' : 'New Scan Recorded';
-      const body = `Temp ${temp}°C • BP ${bp} • HR ${hr} bpm`;
-
-      // schedule with a 1 second trigger to ensure delivery on most devices
-      const id = await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          data: { record_id: row.record_id },
-          sound: 'default',
-          channelId: Platform.OS === 'android' ? 'scans' : undefined,
-        },
-        trigger: { seconds: 1 },
-      });
-      console.log('Local notification scheduled, id=', id);
-    } catch (e) {
-      console.warn('Failed to send local notification', e);
-    }
-  };
-
-  // helper: numeric random
-  const rand = (min, max) => Math.round((Math.random() * (max - min) + min) * 10) / 10;
-
-  // add a random scan record for the logged in user
-  const addRandomScan = async () => {
-    if (!user || !user.studentId) {
-      Alert.alert('Not logged in', 'Please log in to add a scan.');
-      return;
-    }
-    setAddingScan(true);
-    try {
-      // Get consent_id for the student
-      const consentUrl = `${SUPABASE_URL}/rest/v1/consent?select=consent_id&student_id=eq.${user.studentId}&limit=1`;
-      const consentRes = await fetch(consentUrl, {
-        method: 'GET',
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          Accept: 'application/json',
-        },
-      });
-      if (!consentRes.ok) {
-        Alert.alert('Error', 'Unable to find consent record.');
-        setAddingScan(false);
-        return;
-      }
-      const consents = await consentRes.json();
-      if (!Array.isArray(consents) || consents.length === 0) {
-        Alert.alert('Error', 'No consent record found. Please complete consent first.');
-        setAddingScan(false);
-        return;
-      }
-      const consentId = consents[0].consent_id;
-
-      // Randomly choose between normal and abnormal readings (50/50 chance)
-      const isAbnormal = Math.random() < 0.5;
-
-      let temp, hr, sys, dia;
-      
-      if (isAbnormal) {
-        // Generate abnormal readings
-        const abnormalType = Math.floor(Math.random() * 3); // 0: high temp, 1: high BP, 2: high HR
-        
-        switch (abnormalType) {
-          case 0: // High temperature
-            temp = rand(38.5, 40.0);
-            hr = Math.round(rand(75, 95));
-            sys = Math.round(rand(115, 125));
-            dia = Math.round(rand(70, 80));
-            break;
-          case 1: // High blood pressure
-            temp = rand(36.5, 37.5);
-            hr = Math.round(rand(75, 95));
-            sys = Math.round(rand(140, 160));
-            dia = Math.round(rand(90, 100));
-            break;
-          case 2: // High heart rate
-            temp = rand(36.5, 37.5);
-            hr = Math.round(rand(110, 130));
-            sys = Math.round(rand(115, 125));
-            dia = Math.round(rand(70, 80));
-            break;
-          default:
-            // Multiple abnormal readings
-            temp = rand(38.5, 39.5);
-            hr = Math.round(rand(105, 125));
-            sys = Math.round(rand(140, 155));
-            dia = Math.round(rand(88, 98));
-        }
-      } else {
-        // Generate normal readings
-        temp = rand(36.0, 37.5);
-        hr = Math.round(rand(60, 90));
-        sys = Math.round(rand(110, 125));
-        dia = Math.round(rand(65, 80));
-      }
-
-      const now = new Date().toISOString();
-
-      const record = {
-        consent_id: consentId,
-        timelog: now,
-        temperature: temp,
-        heart_rate: hr,
-        systolic: sys,
-        diastolic: dia,
-      };
-
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/vitals`, {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          Prefer: 'return=representation',
-        },
-        body: JSON.stringify(record),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        console.warn('Failed inserting vitals', txt);
-        Alert.alert('Error', 'Unable to add scan. See console for details.');
-        return;
-      }
-      const created = await res.json();
-      const createdRow = Array.isArray(created) && created.length ? created[0] : null;
-      if (createdRow) {
-        if (!createdRow.timelog) createdRow.timelog = now;
-        createdRow.temperature = Number(createdRow.temperature);
-        createdRow.heart_rate = Number(createdRow.heart_rate);
-        createdRow.systolic = Number(createdRow.systolic);
-        createdRow.diastolic = createdRow.diastolic ? Number(createdRow.diastolic) : null;
-        
-        // Transform for UI
-        const transformed = {
-          record_id: createdRow.vitals_id,
-          record_at: createdRow.timelog,
-          temperature: createdRow.temperature,
-          heart_rate: createdRow.heart_rate,
-          blood_pressure: createdRow.diastolic ? `${createdRow.systolic}/${createdRow.diastolic}` : `${createdRow.systolic}`,
-          mood_level: 'N/A',
-        };
-        
-        console.log('Created scan:', createdRow, isAbnormal ? '(ABNORMAL)' : '(NORMAL)');
-        setLatestRecord(transformed);
-        try { emit('scan:added', transformed); } catch (e) { console.warn(e); }
-        sendLocalNotification(transformed);
-        fetchLatest();
-        Alert.alert(
-          'Scan added', 
-          `A ${isAbnormal ? 'abnormal' : 'normal'} scan was added to your records.`
-        );
-      } else {
-        Alert.alert('Scan added', 'Record added but no response returned.');
-      }
-    } catch (err) {
-      console.warn('Error adding random scan', err);
-      Alert.alert('Error', 'Unexpected error while adding scan.');
-    } finally {
-      setAddingScan(false);
-    }
-  };
 
   // Handle mood change with confirmation
   const handleMoodChange = (moodLabel) => {
@@ -806,7 +628,12 @@ export default function Home({ onNavigate, user }) {
         {/* Latest Scan Section */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Latest Scan</Text>
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity 
+            activeOpacity={0.7}
+            onPress={() => {
+              if (typeof onNavigate === 'function') onNavigate('ScanLogs');
+            }}
+          >
             <Text style={[styles.seeAllText, { color: colors.primary }]}>See All</Text>
           </TouchableOpacity>
         </View>
@@ -917,26 +744,6 @@ export default function Home({ onNavigate, user }) {
             )}
           </View>
         </View>
-
-        {/* Add Scan Button */}
-        <TouchableOpacity
-          style={[styles.addScanButton, { backgroundColor: colors.primary }]}
-          activeOpacity={0.85}
-          onPress={addRandomScan}
-          disabled={addingScan}
-        >
-          <View style={styles.addScanButtonContent}>
-            {addingScan ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Ionicons name="add-circle-outline" size={24} color="#fff" />
-            )
-            }
-            <Text style={[styles.addScanText, { marginLeft: addingScan ? 8 : 8 }]}>
-              {addingScan ? 'Adding...' : 'Add New Scan'}
-            </Text>
-          </View>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -1173,29 +980,6 @@ const styles = StyleSheet.create({
   },
   moodOptionLabelSelected: {
     color: '#5E35B1',
-  },
-  addScanButton: {
-    borderRadius: 16,
-    backgroundColor: '#5E35B1',
-    overflow: 'hidden',
-    marginBottom: 20,
-    shadowColor: '#5E35B1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  addScanButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-  },
-  addScanText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginLeft: 8,
   },
   // overlay that dims the content when sidebar is open
   overlay: {

@@ -12,6 +12,7 @@ import {
   ScrollView,
   Alert,
   Image,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
@@ -30,6 +31,7 @@ export default function Login({ onLogin, onNavigate }) {
   const [showPassword, setShowPassword] = useState(false);
   const [studentIdFocused, setStudentIdFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -203,6 +205,68 @@ export default function Login({ onLogin, onNavigate }) {
     footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 14 },
     footerText: { color: colors.textMuted },
     link: { color: colors.primary, fontWeight: '700' },
+    forgotPasswordContainer: {
+      alignItems: 'center',
+      marginTop: 12,
+      marginBottom: 4,
+    },
+    forgotPasswordText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 24,
+      width: '100%',
+      maxWidth: 400,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    modalText: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      lineHeight: 22,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    contactInfo: {
+      fontSize: 15,
+      color: colors.primary,
+      fontWeight: '600',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    modalButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: 'center',
+      marginTop: 16,
+    },
+    modalButtonText: {
+      color: colors.surface,
+      fontSize: 16,
+      fontWeight: '700',
+    },
   });
 
   return (
@@ -306,6 +370,16 @@ export default function Login({ onLogin, onNavigate }) {
             <Text style={styles.buttonText}>Log In</Text>
           </TouchableOpacity>
 
+          {/* Forgot Password Link */}
+          <View style={styles.forgotPasswordContainer}>
+            <TouchableOpacity
+              onPress={() => setShowForgotPasswordModal(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* No account -> Sign up */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>No account?</Text>
@@ -321,6 +395,33 @@ export default function Login({ onLogin, onNavigate }) {
           </View>
         </Animated.View>
       </ScrollView>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        visible={showForgotPasswordModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowForgotPasswordModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Forgot Password?</Text>
+            <Text style={styles.modalText}>
+              To change your password, please contact:
+            </Text>
+            <Text style={styles.contactInfo}>vitalsense@outlook.com</Text>
+            <Text style={styles.modalText}>or call</Text>
+            <Text style={styles.contactInfo}>09685684836</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setShowForgotPasswordModal(false)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.modalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
