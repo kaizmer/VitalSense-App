@@ -94,7 +94,12 @@ export default function Settings({ onBack, user }) {
   ];
 
   if (showSecuritySettings) {
-    return <SecuritySettings onBack={() => setShowSecuritySettings(false)} user={user} />;
+    return (
+      <SecuritySettings 
+        onBack={() => setShowSecuritySettings(false)} 
+        user={user} 
+      />
+    );
   }
 
   return (

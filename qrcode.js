@@ -159,7 +159,7 @@ export default function QRScreen({ onNavigate, onBack, user }) {
   }, []);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <TouchableOpacity 
           onPress={() => (typeof onBack === 'function' ? onBack() : (typeof onNavigate === 'function' && onNavigate('Home')))} 

@@ -98,13 +98,7 @@ export default function ProfileScreen({ onNavigate, onBack, user }) {
 
           <Text style={[styles.title, { color: colors.primary }]}>Profile</Text>
 
-          <TouchableOpacity
-            onPress={() => setIsEditing((s) => !s)}
-            style={styles.iconButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons name={isEditing ? 'checkmark' : 'pencil'} size={20} color={colors.primary} />
-          </TouchableOpacity>
+          <View style={{ width: 36 }} />
         </View>
 
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
