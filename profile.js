@@ -227,17 +227,6 @@ export default function ProfileScreen({ onNavigate, onBack, user }) {
                 </View>
               </View>
 
-              <TouchableOpacity
-                style={[styles.settingsButton, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
-                onPress={() => {
-                  if (typeof onNavigate === 'function') onNavigate('Settings');
-                  else Alert.alert('Settings', 'Not implemented');
-                }}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="settings" size={18} color={colors.textPrimary} />
-                <Text style={[styles.settingsText, { color: colors.textPrimary }]}>Settings</Text>
-              </TouchableOpacity>
 
               <View style={styles.notice}>
                 <Text style={[styles.noticeTitle, { color: colors.textMuted }]}>Last updated</Text>
@@ -261,7 +250,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 48,
+    paddingBottom: 12,
     backgroundColor: 'rgba(255,255,255,0.9)',
     borderBottomWidth: 1,
     borderBottomColor: '#E6E9EE',

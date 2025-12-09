@@ -64,6 +64,28 @@ export default function Home({ onNavigate, user }) {
     }
   };
 
+  const handleLogout = () => {
+    toggleSidebar(false);
+    setTimeout(() => {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Logout', 
+            style: 'destructive', 
+            onPress: () => {
+              if (typeof onNavigate === 'function') {
+                onNavigate('Login');
+              }
+            }
+          },
+        ]
+      );
+    }, 220);
+  };
+
   const vitalScans = [
     {
       id: 1,
@@ -566,7 +588,7 @@ export default function Home({ onNavigate, user }) {
 
           <TouchableOpacity
             style={styles.sidebarItem}
-            onPress={() => handleMenuItem('Login')}
+            onPress={handleLogout}
             activeOpacity={0.7}
           >
             <Ionicons name="log-out-outline" size={20} color="#E53935" />
@@ -759,8 +781,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingTop: StatusBar.currentHeight || 16,
+    paddingTop: 48,
+    paddingBottom: 16,
     backgroundColor: '#F8F9FA',
   },
   menuButton: {

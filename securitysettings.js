@@ -520,7 +520,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 48,
+    paddingBottom: 16,
     backgroundColor: '#F9FAFB',
   },
   backButton: {

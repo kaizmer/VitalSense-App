@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,7 +20,7 @@ import { useTheme } from './ThemeContext';
 const SUPABASE_URL = 'https://dftmxaoxygilbhbonrnu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_YyxtmFa4_omJeaejR6S3gA_D6f1Ycs0';
 
-export default function HealthNotifications({ onNavigate, user }) {
+export default function HealthNotifications({ onNavigate, onBack, user }) {
   const { colors } = useTheme();
 
   const [filter, setFilter] = useState('all');
@@ -300,6 +301,23 @@ export default function HealthNotifications({ onNavigate, user }) {
     return () => { mounted = false; unsub(); };
   }, [user]);
 
+  // Handle Android back button
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      console.log('Hardware back pressed in Notifications');
+      if (typeof onNavigate === 'function') {
+        onNavigate('Home');
+        return true;
+      } else if (typeof onBack === 'function') {
+        onBack();
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [onBack, onNavigate]);
+
   // render: if loading show spinner; tabs remain same
   const filteredWarnings = filter === 'all' ? warnings : warnings.slice(0, 3);
 
@@ -320,10 +338,10 @@ export default function HealthNotifications({ onNavigate, user }) {
                 onPress={() => {
                   console.log('Notifications back pressed');
                   if (typeof onNavigate === 'function') {
-                    try { onNavigate('Home'); } catch (e) { console.warn('onNavigate error', e); }
+                    onNavigate('Home');
+                  } else if (typeof onBack === 'function') {
+                    onBack();
                   }
-                  // also emit fallback event in case parent didn't pass onNavigate
-                  try { emit('navigate', { screen: 'Home' }); } catch (e) { /* ignore */ }
                 }}
               >
                 <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
@@ -705,7 +723,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 48,
+    paddingBottom: 12,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
   iconTouch: { padding: 6, borderRadius: 10 },

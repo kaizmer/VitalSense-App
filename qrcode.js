@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   back: { padding: 6 },
   title: { fontSize: 18, fontWeight: '700' },
-  container: { flex: 1, alignItems: 'center', paddingTop: 40, paddingHorizontal: 20 },
+  container: { flex: 1, alignItems: 'center', paddingTop: 48, paddingHorizontal: 20 },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, BackHandler } from 'react-native';
 import { ThemeProvider, useTheme } from './ThemeContext';
 import Login from './login';
 import Home from './home';
@@ -16,19 +16,45 @@ function AppContent() {
 	const [screen, setScreen] = useState('Login'); // wrapper-managed screen
 	const [user, setUser] = useState(null);
 	const [screenParams, setScreenParams] = useState(null);
+	const [navigationHistory, setNavigationHistory] = useState(['Login']); // Track navigation history
 	const { colors, isDarkMode } = useTheme();
 
 	const handleLogin = (userPayload) => {
 		// store user and navigate to Home
 		setUser(userPayload);
 		setScreen('Home');
+		setNavigationHistory(['Home']); // Reset history on login
 	};
 
 	// general navigation helper that accepts optional params
 	const handleNavigate = (name, params = null) => {
 		setScreenParams(params);
 		setScreen(name);
+		// Add to navigation history
+		setNavigationHistory(prev => [...prev, name]);
 	};
+
+	// Handle hardware back button
+	useEffect(() => {
+		const backAction = () => {
+			if (navigationHistory.length > 1) {
+				// Go back to previous screen
+				const newHistory = [...navigationHistory];
+				newHistory.pop(); // Remove current screen
+				const previousScreen = newHistory[newHistory.length - 1];
+				
+				setNavigationHistory(newHistory);
+				setScreen(previousScreen);
+				setScreenParams(null); // Clear params when going back
+				return true; // Prevent default behavior (app exit)
+			}
+			return false; // Allow app to exit if on first screen
+		};
+
+		const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+		return () => backHandler.remove();
+	}, [navigationHistory]);
 
 	return (
 		<View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -66,7 +92,7 @@ function AppContent() {
 					user={user}
 				/>
 			)}
-			{screen === 'Settings' && <Settings onBack={() => handleNavigate('Home')} user={user} />}
+			{screen === 'Settings' && <Settings onBack={() => handleNavigate('Home')} onNavigate={handleNavigate} user={user} />}
 			{/* ...future screens can be rendered here based on `screen` */}
 			<StatusBar style={isDarkMode ? 'light' : 'dark'} />
 		</View>

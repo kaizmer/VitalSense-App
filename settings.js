@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
 import SecuritySettings from './securitysettings';
 
-export default function Settings({ onBack, user }) {
+export default function Settings({ onBack, onNavigate, user }) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [showSecuritySettings, setShowSecuritySettings] = useState(false);
@@ -25,7 +25,18 @@ export default function Settings({ onBack, user }) {
       'Are you sure you want to logout?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: () => console.log('Logged out') },
+        { 
+          text: 'Logout', 
+          style: 'destructive', 
+          onPress: () => {
+            // Navigate to Login screen
+            if (typeof onNavigate === 'function') {
+              onNavigate('Login');
+            } else if (typeof onBack === 'function') {
+              onBack();
+            }
+          }
+        },
       ]
     );
   };
@@ -178,7 +189,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 48,
+    paddingBottom: 16,
     backgroundColor: '#F9FAFB',
   },
   backButton: {
