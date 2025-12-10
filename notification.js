@@ -15,13 +15,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { subscribe, emit } from './eventBus';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from './ThemeContext';
+import { ActivityLogger } from './activityLogger';
 
 // add Supabase REST config (replace with your values or env in production)
 const SUPABASE_URL = 'https://dftmxaoxygilbhbonrnu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_YyxtmFa4_omJeaejR6S3gA_D6f1Ycs0';
 
 export default function HealthNotifications({ onNavigate, onBack, user }) {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
+
+  // Log viewing notifications activity
+  useEffect(() => {
+    if (user && user.studentId) {
+      ActivityLogger.viewNotifications(user.studentId);
+    }
+  }, [user]);
 
   const [filter, setFilter] = useState('all');
 
@@ -319,11 +327,12 @@ export default function HealthNotifications({ onNavigate, onBack, user }) {
   }, [onBack, onNavigate]);
 
   // render: if loading show spinner; tabs remain same
-  const filteredWarnings = filter === 'all' ? warnings : warnings.slice(0, 3);
+  // Show all warnings regardless of filter
+  const filteredWarnings = warnings;
 
   return (
     <LinearGradient
-      colors={['#EEF2FF', '#F5E8FF', '#FFF1F6']}
+      colors={isDarkMode ? ['#0B1120', '#1E293B', '#0B1120'] : ['#EEF2FF', '#F5E8FF', '#FFF1F6']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.background}
@@ -723,7 +732,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 48,
+    paddingTop: 56,
     paddingBottom: 12,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },

@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
+import { ActivityLogger } from './activityLogger';
 
 // add Supabase REST endpoint config
 const SUPABASE_URL = 'https://dftmxaoxygilbhbonrnu.supabase.co';
@@ -99,6 +100,9 @@ export default function Login({ onLogin, onNavigate }) {
         // include the entered password so QR screen can generate full payload
         password: password,
       };
+
+      // Log login activity
+      await ActivityLogger.login(data.student_id);
 
       if (typeof onLogin === 'function') {
         onLogin(payload); // App.js will handle navigation to Home

@@ -14,6 +14,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
+import { ActivityLogger } from './activityLogger';
 
 // Supabase REST config (match whatever you use in other files)
 const SUPABASE_URL = 'https://dftmxaoxygilbhbonrnu.supabase.co';
@@ -180,6 +181,9 @@ export default function Signup({ onNavigate }) {
         console.warn('Consent creation error', e);
         // Student created but consent failed
       }
+
+      // Log signup activity
+      await ActivityLogger.signup(Number(studentId));
 
       Alert.alert('Account created', 'Your account was successfully created.', [
         { text: 'OK', onPress: () => { if (typeof onNavigate === 'function') onNavigate('Login'); } },

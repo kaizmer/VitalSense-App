@@ -3,6 +3,7 @@ import { SafeAreaView, View, Text, TouchableOpacity, StyleSheet, Alert, TextInpu
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useTheme } from './ThemeContext';
+import { ActivityLogger } from './activityLogger';
 
 // Supabase REST config
 const SUPABASE_URL = 'https://dftmxaoxygilbhbonrnu.supabase.co';
@@ -26,6 +27,13 @@ export default function QRScreen({ onNavigate, onBack, user }) {
   const studentId = user?.studentId ?? user?.student_id ?? '';
   const password = user?.password ?? user?.pass ?? '';
   const payload = JSON.stringify({ student_id: studentId, password });
+
+  // Log QR code view activity
+  useEffect(() => {
+    if (user && user.studentId) {
+      ActivityLogger.viewQRCode(user.studentId);
+    }
+  }, [user]);
 
   // Fetch student's PIN code from database
   useEffect(() => {
@@ -111,6 +119,12 @@ export default function QRScreen({ onNavigate, onBack, user }) {
       setIsCreatingPin(false);
       setNewPin('');
       setConfirmPin('');
+      
+      // Log PIN creation activity
+      if (studentId) {
+        await ActivityLogger.createPIN(studentId);
+      }
+      
       Alert.alert('Success', 'Your PIN has been created successfully!');
     } catch (err) {
       console.warn('Error saving PIN', err);
@@ -141,6 +155,12 @@ export default function QRScreen({ onNavigate, onBack, user }) {
     setTimeout(() => {
       if (pinCode === storedPin) {
         setIsVerified(true);
+        
+        // Log PIN verification activity
+        if (studentId) {
+          ActivityLogger.verifyPIN(studentId);
+        }
+        
         Alert.alert('Success', 'PIN verified! QR code unlocked.');
       } else {
         Alert.alert('Error', 'Incorrect PIN code. Please try again.');
@@ -313,12 +333,13 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     justifyContent: 'space-between', 
     paddingHorizontal: 16, 
-    paddingVertical: 12, 
+    paddingTop: 56,
+    paddingBottom: 12,
     borderBottomWidth: 1, 
   },
   back: { padding: 6 },
   title: { fontSize: 18, fontWeight: '700' },
-  container: { flex: 1, alignItems: 'center', paddingTop: 48, paddingHorizontal: 20 },
+  container: { flex: 1, alignItems: 'center', paddingTop: 24, paddingHorizontal: 20 },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

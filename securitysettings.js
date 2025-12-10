@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
+import { ActivityLogger } from './activityLogger';
 
 // Supabase REST config
 const SUPABASE_URL = 'https://dftmxaoxygilbhbonrnu.supabase.co';
@@ -160,6 +161,11 @@ export default function SecuritySettings({ onBack, user }) {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      
+      // Log password change activity
+      if (studentId) {
+        await ActivityLogger.changePassword(studentId);
+      }
       
       // Hide success message after 3 seconds
       setTimeout(() => {
@@ -520,7 +526,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 48,
+    paddingTop: 56,
     paddingBottom: 16,
     backgroundColor: '#F9FAFB',
   },

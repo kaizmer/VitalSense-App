@@ -34,21 +34,26 @@ function AppContent() {
 		setNavigationHistory(prev => [...prev, name]);
 	};
 
+	// Handle back navigation (used by both hardware back button and onBack callbacks)
+	const handleBack = () => {
+		if (navigationHistory.length > 1) {
+			// Go back to previous screen
+			const newHistory = [...navigationHistory];
+			newHistory.pop(); // Remove current screen
+			const previousScreen = newHistory[newHistory.length - 1];
+			
+			setNavigationHistory(newHistory);
+			setScreen(previousScreen);
+			setScreenParams(null); // Clear params when going back
+			return true;
+		}
+		return false;
+	};
+
 	// Handle hardware back button
 	useEffect(() => {
 		const backAction = () => {
-			if (navigationHistory.length > 1) {
-				// Go back to previous screen
-				const newHistory = [...navigationHistory];
-				newHistory.pop(); // Remove current screen
-				const previousScreen = newHistory[newHistory.length - 1];
-				
-				setNavigationHistory(newHistory);
-				setScreen(previousScreen);
-				setScreenParams(null); // Clear params when going back
-				return true; // Prevent default behavior (app exit)
-			}
-			return false; // Allow app to exit if on first screen
+			return handleBack();
 		};
 
 		const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
@@ -62,12 +67,12 @@ function AppContent() {
 			{screen === 'Signup' && <Signup onNavigate={handleNavigate} />}
 			{screen === 'Home' && <Home onNavigate={handleNavigate} user={user} />}
 			{screen === 'Notifications' && (
-				<HealthNotifications onNavigate={handleNavigate} user={user} />
+				<HealthNotifications onNavigate={handleNavigate} onBack={handleBack} user={user} />
 			)}
 			{screen === 'QR' && (
 				<QRScreen
 					onNavigate={handleNavigate}
-					onBack={() => handleNavigate('Home')}
+					onBack={handleBack}
 					user={user}
 				/>
 			)}
@@ -75,24 +80,24 @@ function AppContent() {
 				<Trends
 					metric={(screenParams && screenParams.metric) || 'Blood Pressure'}
 					user={user}
-					onBack={() => handleNavigate('Home')}
+					onBack={handleBack}
 				/>
 			)}
 			{screen === 'Profile' && (
 				<ProfileScreen
 					onNavigate={handleNavigate}
-					onBack={() => handleNavigate('Home')}
+					onBack={handleBack}
 					user={user}
 				/>
 			)}
 			{screen === 'ScanLogs' && (
 				<ScanLogs
 					onNavigate={handleNavigate}
-					onBack={() => handleNavigate('Home')}
+					onBack={handleBack}
 					user={user}
 				/>
 			)}
-			{screen === 'Settings' && <Settings onBack={() => handleNavigate('Home')} onNavigate={handleNavigate} user={user} />}
+			{screen === 'Settings' && <Settings onBack={handleBack} onNavigate={handleNavigate} user={user} />}
 			{/* ...future screens can be rendered here based on `screen` */}
 			<StatusBar style={isDarkMode ? 'light' : 'dark'} />
 		</View>

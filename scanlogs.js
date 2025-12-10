@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from './ThemeContext';
+import { ActivityLogger } from './activityLogger';
 
 const SUPABASE_URL = 'https://dftmxaoxygilbhbonrnu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_YyxtmFa4_omJeaejR6S3gA_D6f1Ycs0';
@@ -19,6 +20,13 @@ export default function ScanLogs({ onNavigate, onBack, user }) {
   const { colors, isDarkMode } = useTheme();
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Log viewing scan logs activity
+  useEffect(() => {
+    if (user && user.studentId) {
+      ActivityLogger.viewScanLogs(user.studentId);
+    }
+  }, [user]);
 
   useEffect(() => {
     fetchScans();
@@ -207,7 +215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 48,
+    paddingTop: 56,
     paddingBottom: 16,
     borderBottomWidth: 1,
   },

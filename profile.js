@@ -12,18 +12,26 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
+import { ActivityLogger } from './activityLogger';
 
 // add Supabase REST config (use same values as other files)
 const SUPABASE_URL = 'https://dftmxaoxygilbhbonrnu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_YyxtmFa4_omJeaejR6S3gA_D6f1Ycs0';
 
 export default function ProfileScreen({ onNavigate, onBack, user }) {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
 
   // replace static profileData with state that will be filled from Supabase
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Log profile view activity
+  useEffect(() => {
+    if (user && user.studentId) {
+      ActivityLogger.viewProfile(user.studentId);
+    }
+  }, [user]);
 
   // fetch student row when user prop is available
   useEffect(() => {
@@ -86,7 +94,7 @@ export default function ProfileScreen({ onNavigate, onBack, user }) {
   return (
     <SafeAreaView style={styles.safe}>
       <LinearGradient
-        colors={['#EEF2FF', '#F5E8FF', '#FFF1F6']}
+        colors={isDarkMode ? ['#0B1120', '#1E293B', '#0B1120'] : ['#EEF2FF', '#F5E8FF', '#FFF1F6']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.background}
@@ -250,7 +258,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 48,
+    paddingTop: 56,
     paddingBottom: 12,
     backgroundColor: 'rgba(255,255,255,0.9)',
     borderBottomWidth: 1,

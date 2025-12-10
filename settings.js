@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,39 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from './ThemeContext';
 import SecuritySettings from './securitysettings';
+import { ActivityLogger } from './activityLogger';
+
+const NOTIFICATIONS_KEY = 'vitalsense:notifications_enabled';
 
 export default function Settings({ onBack, onNavigate, user }) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [showSecuritySettings, setShowSecuritySettings] = useState(false);
+
+  // Load notification preference from storage
+  useEffect(() => {
+    const loadNotificationPreference = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(NOTIFICATIONS_KEY);
+        if (stored !== null) {
+          setNotifications(stored === 'true');
+        }
+      } catch (err) {
+        console.warn('Failed to load notification preference', err);
+      }
+    };
+    loadNotificationPreference();
+  }, []);
+
+  // Log viewing settings activity
+  useEffect(() => {
+    if (user && user.studentId) {
+      ActivityLogger.viewSettings(user.studentId);
+    }
+  }, [user]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -28,7 +54,11 @@ export default function Settings({ onBack, onNavigate, user }) {
         { 
           text: 'Logout', 
           style: 'destructive', 
-          onPress: () => {
+          onPress: async () => {
+            // Log logout activity
+            if (user && user.studentId) {
+              await ActivityLogger.logout(user.studentId);
+            }
             // Navigate to Login screen
             if (typeof onNavigate === 'function') {
               onNavigate('Login');
@@ -51,7 +81,12 @@ export default function Settings({ onBack, onNavigate, user }) {
       subtitle: isDarkMode ? 'Enabled' : 'Disabled',
       type: 'toggle',
       value: isDarkMode,
-      onToggle: toggleTheme,
+      onToggle: () => {
+        toggleTheme();
+        if (user && user.studentId) {
+          ActivityLogger.toggleDarkMode(user.studentId, !isDarkMode);
+        }
+      },
     },
     {
       id: 2,
@@ -62,7 +97,17 @@ export default function Settings({ onBack, onNavigate, user }) {
       subtitle: notifications ? 'Enabled' : 'Disabled',
       type: 'toggle',
       value: notifications,
-      onToggle: setNotifications,
+      onToggle: async (val) => {
+        setNotifications(val);
+        try {
+          await AsyncStorage.setItem(NOTIFICATIONS_KEY, val.toString());
+        } catch (err) {
+          console.warn('Failed to save notification preference', err);
+        }
+        if (user && user.studentId) {
+          ActivityLogger.toggleNotifications(user.studentId, val);
+        }
+      },
     },
     {
       id: 4,
@@ -72,7 +117,12 @@ export default function Settings({ onBack, onNavigate, user }) {
       title: 'Privacy & Security',
       subtitle: 'Manage your privacy settings',
       type: 'navigation',
-      onPress: () => setShowSecuritySettings(true),
+      onPress: () => {
+        if (user && user.studentId) {
+          ActivityLogger.viewSecuritySettings(user.studentId);
+        }
+        setShowSecuritySettings(true);
+      },
     },
     {
       id: 5,
@@ -189,7 +239,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 48,
+    paddingTop: 56,
     paddingBottom: 16,
     backgroundColor: '#F9FAFB',
   },

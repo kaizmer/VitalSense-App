@@ -6,11 +6,13 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
+  BackHandler,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop, Circle, Rect } from 'react-native-svg';
 import { useTheme } from './ThemeContext';
+import { ActivityLogger } from './activityLogger';
 
 const { width } = Dimensions.get('window');
 
@@ -148,6 +150,30 @@ export default function Trends({ metric = 'Blood Pressure', onBack, user }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [timeframe, setTimeframe] = useState('monthly'); // 'daily' | 'weekly' | 'monthly'
+
+  // Log viewing trends activity
+  useEffect(() => {
+    if (user && user.studentId) {
+      const metricName = effectiveMetric || 'All metrics';
+      ActivityLogger.viewTrends(user.studentId, metricName);
+    }
+  }, [user, effectiveMetric]);
+
+  // Handle hardware back button
+  useEffect(() => {
+    const backAction = () => {
+      // If in detail view (selectedMetric is set), go back to list view
+      if (metric === 'all' && selectedMetric) {
+        setSelectedMetric(null);
+        return true; // Prevent default behavior
+      }
+      // Otherwise let the parent handle it
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [metric, selectedMetric]);
 
   useEffect(() => {
     if (!user) { setRecords([]); return; }
@@ -486,7 +512,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 48,
+    paddingTop: 56,
     paddingBottom: 16,
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderBottomWidth: 1,

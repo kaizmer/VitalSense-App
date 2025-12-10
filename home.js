@@ -19,6 +19,7 @@ import { emit, subscribe } from './eventBus';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { useTheme } from './ThemeContext';
+import { ActivityLogger } from './activityLogger';
 
 const SIDEBAR_WIDTH = 260;
 
@@ -425,6 +426,10 @@ export default function Home({ onNavigate, user }) {
           mood_label: moodLabel,
           timelog: createdRow.timelog,
         });
+        
+        // Log mood recording activity
+        await ActivityLogger.recordMood(user.studentId, moodLabel);
+        
         // Optional: Show success message
         Alert.alert('Success', `Your mood has been updated to "${moodLabel}".`);
       }
@@ -781,7 +786,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 48,
+    paddingTop: 56,
     paddingBottom: 16,
     backgroundColor: '#F8F9FA',
   },
