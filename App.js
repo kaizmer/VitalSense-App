@@ -8,49 +8,49 @@ import HealthNotifications from './notification';
 import Trends from './trends';
 import ProfileScreen from './profile';
 import QRScreen from './qrcode';
-import Signup from './signup'; // add import for Signup
+import Signup from './signup'; 
 import Settings from './settings';
 import ScanLogs from './scanlogs';
 
 function AppContent() {
-	const [screen, setScreen] = useState('Login'); // wrapper-managed screen
+	const [screen, setScreen] = useState('Login'); 
 	const [user, setUser] = useState(null);
 	const [screenParams, setScreenParams] = useState(null);
-	const [navigationHistory, setNavigationHistory] = useState(['Login']); // Track navigation history
+	const [navigationHistory, setNavigationHistory] = useState(['Login']); 
 	const { colors, isDarkMode } = useTheme();
 
 	const handleLogin = (userPayload) => {
-		// store user and navigate to Home
 		setUser(userPayload);
 		setScreen('Home');
-		setNavigationHistory(['Home']); // Reset history on login
+		setNavigationHistory(['Home']); 
 	};
 
-	// general navigation helper that accepts optional params
 	const handleNavigate = (name, params = null) => {
 		setScreenParams(params);
 		setScreen(name);
-		// Add to navigation history
-		setNavigationHistory(prev => [...prev, name]);
+		setNavigationHistory(prev => {
+			const lastScreen = prev[prev.length - 1];
+			if (lastScreen === name) {
+				return prev;
+			}
+			return [...prev, name];
+		});
 	};
 
-	// Handle back navigation (used by both hardware back button and onBack callbacks)
 	const handleBack = () => {
 		if (navigationHistory.length > 1) {
-			// Go back to previous screen
 			const newHistory = [...navigationHistory];
-			newHistory.pop(); // Remove current screen
+			newHistory.pop(); 
 			const previousScreen = newHistory[newHistory.length - 1];
 			
 			setNavigationHistory(newHistory);
 			setScreen(previousScreen);
-			setScreenParams(null); // Clear params when going back
+			setScreenParams(null); 
 			return true;
 		}
 		return false;
 	};
 
-	// Handle hardware back button
 	useEffect(() => {
 		const backAction = () => {
 			return handleBack();

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -125,10 +125,10 @@ export default function Home({ onNavigate, user }) {
 
   const moods = [
     { emoji: '😊', label: 'Happy' },
+    { emoji: '😐', label: 'Nothing' },
     { emoji: '😢', label: 'Sad' },
-    { emoji: '😴', label: 'Tired' },
+    { emoji: '😟', label: 'Worried' },
     { emoji: '😰', label: 'Anxious' },
-    { emoji: '😌', label: 'Calm' },
   ];
 
   const [latestRecord, setLatestRecord] = useState(null);
@@ -245,11 +245,11 @@ export default function Home({ onNavigate, user }) {
       if (mood) {
         // Map mood_level number to mood label
         const moodMap = {
-          1: 'Happy',
-          2: 'Sad',
-          3: 'Tired',
-          4: 'Anxious',
-          5: 'Calm',
+          5: 'Happy',
+          4: 'Nothing',
+          3: 'Sad',
+          2: 'Worried',
+          1: 'Anxious',
         };
         setLatestMood({
           mood_id: mood.mood_id,
@@ -263,6 +263,8 @@ export default function Home({ onNavigate, user }) {
       console.warn('Error fetching latest mood', err);
     }
   };
+
+
 
   useEffect(() => {
     fetchLatest();
@@ -299,6 +301,8 @@ export default function Home({ onNavigate, user }) {
   }, []);
 
   // navigate to Notifications when a notification is tapped
+  const hasHandledInitialNotification = useRef(false);
+
   useEffect(() => {
     if (typeof onNavigate !== 'function') return;
 
@@ -313,17 +317,21 @@ export default function Home({ onNavigate, user }) {
     });
 
     // handle case where app was launched from a notification (cold start)
-    (async () => {
-      try {
-        const last = await Notifications.getLastNotificationResponseAsync();
-        if (last) {
-          console.log('App opened from notification -> navigating to Notifications', last);
-          onNavigate('Notifications');
+    // Only check this once to avoid repeated navigation
+    if (!hasHandledInitialNotification.current) {
+      hasHandledInitialNotification.current = true;
+      (async () => {
+        try {
+          const last = await Notifications.getLastNotificationResponseAsync();
+          if (last) {
+            console.log('App opened from notification -> navigating to Notifications', last);
+            onNavigate('Notifications');
+          }
+        } catch (e) {
+          console.warn('Error checking last notification response', e);
         }
-      } catch (e) {
-        console.warn('Error checking last notification response', e);
-      }
-    })();
+      })();
+    }
 
     return () => {
       try { respSub.remove(); } catch (_) { /* ignore */ }
@@ -383,11 +391,11 @@ export default function Home({ onNavigate, user }) {
 
       // Map mood label to numeric level
       const moodLevelMap = {
-        'Happy': 1,
-        'Sad': 2,
-        'Tired': 3,
-        'Anxious': 4,
-        'Calm': 5,
+        'Happy': 5,
+        'Nothing': 4,
+        'Sad': 3,
+        'Worried': 2,
+        'Anxious': 1,
       };
       const moodLevel = moodLevelMap[moodLabel] || 1;
 
@@ -441,6 +449,10 @@ export default function Home({ onNavigate, user }) {
     }
   };
 
+
+
+
+
   // build displayed scan cards from latestRecord (useMemo so it updates reactively)
   const displayedScans = React.useMemo(() => {
     const hasAny = Boolean(latestRecord);
@@ -457,7 +469,7 @@ export default function Home({ onNavigate, user }) {
         timestamp: hasAny && latestRecord?.record_at ? new Date(latestRecord.record_at).toLocaleString() : vitalScans[0].timestamp,
         status: 'elevated',
         hasData: hasAny && Boolean(latestRecord?.blood_pressure),
-        emptyMessage: 'No BP record yet — please complete your first scan.',
+        emptyMessage: 'No BP record yet – please complete your first scan.',
       },
       {
         id: 'temp',
@@ -470,7 +482,7 @@ export default function Home({ onNavigate, user }) {
         timestamp: hasAny && latestRecord?.record_at ? new Date(latestRecord.record_at).toLocaleString() : vitalScans[1].timestamp,
         status: 'high',
         hasData: hasAny && latestRecord?.temperature != null,
-        emptyMessage: 'No temperature record yet — scan at the kiosk.',
+        emptyMessage: 'No temperature record yet – scan at the kiosk.',
       },
       {
         id: 'hr',
@@ -483,7 +495,7 @@ export default function Home({ onNavigate, user }) {
         timestamp: hasAny && latestRecord?.record_at ? new Date(latestRecord.record_at).toLocaleString() : vitalScans[2].timestamp,
         status: 'elevated',
         hasData: hasAny && latestRecord?.heart_rate != null,
-        emptyMessage: 'Heart rate data unavailable — visit the kiosk to generate your first reading.',
+        emptyMessage: 'Heart rate data unavailable – visit the kiosk to generate your first reading.',
       },
     ];
   }, [latestRecord, vitalScans]);
@@ -618,7 +630,7 @@ export default function Home({ onNavigate, user }) {
           <View style={styles.announcementContent}>
             <Text style={[styles.announcementTitle, { color: colors.primary }]}>Announcement</Text>
             <Text style={[styles.announcementText, { color: colors.textSecondary }]}>
-              Finals Week is Coming! Remember to take breaks and monitor your health. Visit the VitalSense kiosk for a quick scan before your study sessions.
+              Hello Trailblazer! Paugnat is currently occuring make sure to attend events and activities organized by the school and orgs. Stay safe and healthy!
             </Text>
           </View>
         </View>
@@ -696,7 +708,7 @@ export default function Home({ onNavigate, user }) {
               <Text style={[styles.vitalTimestamp, { color: colors.textMuted }]}>{scan.timestamp}</Text>
             </View>
             <View style={styles.vitalValueContainer}>
-              <Text style={[styles.vitalValue, { color: colors.textPrimary }]}>{scan.hasData ? scan.value : '—'}</Text>
+              <Text style={[styles.vitalValue, { color: colors.textPrimary }]}>{scan.hasData ? scan.value : '–'}</Text>
               <Text style={[styles.vitalUnit, { color: colors.textSecondary }]}>{scan.unit}</Text>
               {!scan.hasData && (
                 <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500', marginTop: 4 }}>
@@ -707,70 +719,34 @@ export default function Home({ onNavigate, user }) {
           </TouchableOpacity>
         ))}
 
-        {/* Mood Tracker */}
-        <View style={[styles.moodCard, { backgroundColor: colors.cardBackground }]}>
-          <View style={styles.moodIconContainer}>
+        {/* Mood Display */}
+        <View style={[styles.vitalCard, { backgroundColor: colors.cardBackground }]}>
+          <View style={[styles.vitalIconContainer, { backgroundColor: '#FFF9C4' }]}>
             <Text style={styles.moodIconEmoji}>
               {moods.find(m => m.label === selectedMood)?.emoji || '😊'}
             </Text>
           </View>
-          <View style={styles.moodContent}>
-            <Text style={[styles.moodTitle, { color: colors.textPrimary }]}>Mood</Text>
-            <Text style={[styles.moodTimestamp, { color: colors.textMuted }]}>
+          <View style={styles.vitalInfo}>
+            <Text style={[styles.vitalType, { color: colors.textPrimary }]}>Mood</Text>
+            <Text style={[styles.vitalTimestamp, { color: colors.textMuted }]}>
               {latestMood?.timelog 
                 ? new Date(latestMood.timelog).toLocaleString() 
                 : 'No mood recorded yet'}
             </Text>
-            
-            <View style={styles.moodSelector}>
-              <View style={[styles.currentMoodDisplay, { backgroundColor: colors.border }]}>
-                <Text style={[styles.currentMoodEmoji, { color: colors.textPrimary }]}>
-                  {moods.find(m => m.label === selectedMood)?.emoji || '😊'}
-                </Text>
-                <Text style={[styles.currentMoodText, { color: colors.textPrimary }]}>{selectedMood}</Text>
-                <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
-              </View>
-            </View>
-
-            {/* Mood Options */}
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              style={styles.moodOptions}
-            >
-              {moods.map((mood) => (
-                <TouchableOpacity
-                  key={mood.label}
-                  style={[
-                    styles.moodOption,
-                    { backgroundColor: colors.border },
-                    selectedMood === mood.label && styles.moodOptionSelected,
-                  ]}
-                  onPress={() => handleMoodChange(mood.label)}
-                  activeOpacity={0.7}
-                  disabled={savingMood}
-                >
-                  <Text style={styles.moodOptionEmoji}>{mood.emoji}</Text>
-                  <Text style={[
-                    styles.moodOptionLabel,
-                    { color: colors.textSecondary },
-                    selectedMood === mood.label && { color: colors.primary },
-                  ]}>
-                    {mood.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            {savingMood && (
-              <View style={{ marginTop: 8, alignItems: 'center' }}>
-                <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
-                  Saving mood...
-                </Text>
-              </View>
+          </View>
+          <View style={styles.vitalValueContainer}>
+            <Text style={[styles.vitalValue, { color: colors.textPrimary, fontSize: 20 }]}>
+              {selectedMood || '—'}
+            </Text>
+            {!latestMood && (
+              <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500', marginTop: 4 }}>
+                No records yet
+              </Text>
             )}
           </View>
         </View>
+
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -1066,4 +1042,56 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     borderRadius: 2,
   },
+  feelingsSubtitle: {
+    fontSize: 13,
+    marginTop: 8,
+    marginBottom: 12,
+    fontWeight: '600',
+  },
+  feelingsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  feelingOption: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#F5F5F5',
+    minWidth: 100,
+    position: 'relative',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  feelingOptionSelected: {
+    borderWidth: 2,
+  },
+  feelingOptionEmoji: {
+    fontSize: 28,
+    marginBottom: 6,
+  },
+  feelingOptionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  feelingCheckmark: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  feelingsCount: {
+    fontSize: 12,
+    marginTop: 8,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });
+

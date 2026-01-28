@@ -1,6 +1,3 @@
-// Activity Logger Utility
-// Logs student activities to the student_activity table
-
 const SUPABASE_URL = 'https://dftmxaoxygilbhbonrnu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_YyxtmFa4_omJeaejR6S3gA_D6f1Ycs0';
 
